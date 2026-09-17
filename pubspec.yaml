@@ -75,6 +75,9 @@ flutter:
     - assets/online payments landing.svg
     - assets/online shopping.svg
     - assets/uxeloft logo.png
+    - assets/banners/
+    - assets/categories/
+    - assets/products/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

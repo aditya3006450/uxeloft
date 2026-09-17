@@ -11,6 +11,7 @@ import '../config/api_config.dart';
 class AuthController extends GetxController {
   static const String boxName = 'auth';
   static const String keyIsLoggedIn = 'isLoggedIn';
+  static const String keyUsername = 'username';
 
   static AuthController get to => Get.find();
 
@@ -22,6 +23,7 @@ class AuthController extends GetxController {
 
   final RxBool isLoggedIn = false.obs;
   final Rxn<User> user = Rxn<User>();
+  final RxString username = ''.obs;
 
   final RxBool isSendingOtp = false.obs;
   final RxBool isVerifyingOtp = false.obs;
@@ -32,12 +34,29 @@ class AuthController extends GetxController {
     super.onInit();
     _box = Hive.box(boxName);
     isLoggedIn.value = _box.get(keyIsLoggedIn, defaultValue: false) as bool;
+    username.value = _box.get(keyUsername, defaultValue: '') as String;
 
     _auth.authStateChanges().listen((firebaseUser) {
       user.value = firebaseUser;
       isLoggedIn.value = firebaseUser != null;
       _box.put(keyIsLoggedIn, firebaseUser != null);
+      if (firebaseUser != null) {
+        _saveUsername(firebaseUser);
+      }
     });
+  }
+
+  void _saveUsername(User firebaseUser) {
+    final displayName = firebaseUser.displayName?.trim() ?? '';
+    final email = firebaseUser.email?.trim() ?? '';
+    final name = displayName.isNotEmpty
+        ? displayName
+        : email.isNotEmpty
+            ? email.split('@').first
+            : '';
+    if (name.isEmpty) return;
+    username.value = name;
+    _box.put(keyUsername, name);
   }
 
   Map<String, String> _headers() => {'Content-Type': 'application/json'};

@@ -14,14 +14,6 @@
       },
       "oauth_client": [
         {
-          "client_id": "1062510969847-vlgs3e75jc77loct6vnorr2h2tsta74q.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.example.uxeloft",
-            "certificate_hash": "5fbd8158c860e0f307e60dc319beec40681e7ec8"
-          }
-        },
-        {
           "client_id": "1062510969847-9p94mgsbs33bnb76bd1kpnnjn1co29e3.apps.googleusercontent.com",
           "client_type": 3
         }

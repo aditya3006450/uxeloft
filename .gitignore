@@ -47,3 +47,5 @@ app.*.map.json
 # Node / Vercel
 node_modules/
 .vercel/
+.vercel
+.env*
