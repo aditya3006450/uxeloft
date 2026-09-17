@@ -1,31 +1,31 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
-
 import {
   COOLDOWN_MS,
+  CORS_HEADERS,
   EMAIL_REGEX,
+  OTP_TTL_MS,
   db,
   genOtp,
+  json,
   sendEmail,
-  sendJson,
   sha256,
-  OTP_TTL_MS,
 } from './_lib/firebase';
 
-export default async function handler(
-  req: VercelRequest,
-  res: VercelResponse,
-) {
-  if (req.method === 'OPTIONS') {
-    return sendJson(res, 204, {});
-  }
-  if (req.method !== 'POST') {
-    return sendJson(res, 405, { error: 'Method not allowed' });
-  }
+export function OPTIONS(): Response {
+  return new Response(null, { status: 204, headers: CORS_HEADERS });
+}
 
+export async function POST(request: Request): Promise<Response> {
   try {
-    const email = String(req.body?.email || '').trim().toLowerCase();
+    let body: { email?: string };
+    try {
+      body = (await request.json()) as { email?: string };
+    } catch {
+      return json({ error: 'Invalid JSON body' }, 400);
+    }
+
+    const email = String(body?.email || '').trim().toLowerCase();
     if (!EMAIL_REGEX.test(email)) {
-      return sendJson(res, 400, { error: 'Invalid email address' });
+      return json({ error: 'Invalid email address' }, 400);
     }
 
     const ref = db.collection('otpRequests').doc(email);
@@ -38,9 +38,10 @@ export default async function handler(
           ? data.createdAt
           : data.createdAt?.toMillis?.() ?? 0;
       if (Date.now() - createdAt < COOLDOWN_MS) {
-        return sendJson(res, 429, {
-          error: 'Please wait a moment before requesting a new code',
-        });
+        return json(
+          { error: 'Please wait a moment before requesting a new code' },
+          429,
+        );
       }
     }
 
@@ -54,11 +55,9 @@ export default async function handler(
 
     await sendEmail(email, otp);
 
-    return sendJson(res, 200, { success: true });
+    return json({ success: true });
   } catch (error: any) {
     console.error('sendOtp error', error);
-    return sendJson(res, 500, {
-      error: error?.message || 'Something went wrong',
-    });
+    return json({ error: error?.message || 'Something went wrong' }, 500);
   }
 }

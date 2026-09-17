@@ -1,44 +1,42 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
-
 import {
+  CORS_HEADERS,
   EMAIL_REGEX,
   MAX_ATTEMPTS,
   OTP_TTL_MS,
   auth,
   db,
-  sendJson,
+  json,
   sha256,
 } from './_lib/firebase';
 
-export default async function handler(
-  req: VercelRequest,
-  res: VercelResponse,
-) {
-  if (req.method === 'OPTIONS') {
-    return sendJson(res, 204, {});
-  }
-  if (req.method !== 'POST') {
-    return sendJson(res, 405, { error: 'Method not allowed' });
-  }
+export function OPTIONS(): Response {
+  return new Response(null, { status: 204, headers: CORS_HEADERS });
+}
 
+export async function POST(request: Request): Promise<Response> {
   try {
-    const email = String(req.body?.email || '').trim().toLowerCase();
-    const code = String(req.body?.code || '').trim();
+    let body: { email?: string; code?: string };
+    try {
+      body = (await request.json()) as { email?: string; code?: string };
+    } catch {
+      return json({ error: 'Invalid JSON body' }, 400);
+    }
+
+    const email = String(body?.email || '').trim().toLowerCase();
+    const code = String(body?.code || '').trim();
 
     if (!EMAIL_REGEX.test(email)) {
-      return sendJson(res, 400, { error: 'Invalid email address' });
+      return json({ error: 'Invalid email address' }, 400);
     }
     if (!/^\d{4}$/.test(code)) {
-      return sendJson(res, 400, { error: 'Code must be 4 digits' });
+      return json({ error: 'Code must be 4 digits' }, 400);
     }
 
     const ref = db.collection('otpRequests').doc(email);
     const snap = await ref.get();
 
     if (!snap.exists) {
-      return sendJson(res, 404, {
-        error: 'No code requested for this email',
-      });
+      return json({ error: 'No code requested for this email' }, 404);
     }
 
     const data = snap.data()!;
@@ -49,20 +47,18 @@ export default async function handler(
 
     if (Date.now() > expiresAt) {
       await ref.delete();
-      return sendJson(res, 410, { error: 'Code has expired' });
+      return json({ error: 'Code has expired' }, 410);
     }
 
     const attempts = data.attempts ?? 0;
     if (attempts >= MAX_ATTEMPTS) {
       await ref.delete();
-      return sendJson(res, 429, {
-        error: 'Too many attempts, request a new code',
-      });
+      return json({ error: 'Too many attempts, request a new code' }, 429);
     }
 
     if (data.codeHash !== sha256(code)) {
       await ref.update({ attempts: attempts + 1 });
-      return sendJson(res, 401, { error: 'Incorrect code' });
+      return json({ error: 'Incorrect code' }, 401);
     }
 
     await ref.delete();
@@ -81,11 +77,9 @@ export default async function handler(
 
     const token = await auth.createCustomToken(uid);
 
-    return sendJson(res, 200, { success: true, token });
+    return json({ success: true, token });
   } catch (error: any) {
     console.error('verifyOtp error', error);
-    return sendJson(res, 500, {
-      error: error?.message || 'Something went wrong',
-    });
+    return json({ error: error?.message || 'Something went wrong' }, 500);
   }
 }

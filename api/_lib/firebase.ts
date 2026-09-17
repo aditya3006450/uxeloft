@@ -1,3 +1,5 @@
+import { createHash } from 'node:crypto';
+
 import { cert, getApps, initializeApp } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
@@ -51,16 +53,20 @@ export function genOtp(): string {
   return String(Math.floor(Math.random() * 10 ** 4)).padStart(4, '0');
 }
 
-export const sha256 = (input: string): string => {
-  const { createHash } = require('crypto');
-  return createHash('sha256').update(input).digest('hex');
+export const sha256 = (input: string): string =>
+  createHash('sha256').update(input).digest('hex');
+
+export const CORS_HEADERS: Record<string, string> = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type',
 };
 
-export function sendJson(res: any, status: number, body: object): any {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  return res.status(status).json(body);
+export function json(body: unknown, status = 200): Response {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { 'Content-Type': 'application/json', ...CORS_HEADERS },
+  });
 }
 
 let transporter: Transporter | null = null;
