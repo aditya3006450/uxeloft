@@ -6,6 +6,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'controllers/auth_controller.dart';
 import 'firebase_options.dart';
 import 'screens/home_screen.dart';
+import 'screens/login_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'splash_screen.dart';
 
@@ -41,12 +42,17 @@ class _MyAppState extends State<MyApp> {
         scaffoldBackgroundColor: Colors.white,
         useMaterial3: true,
       ),
+      getPages: [
+        GetPage(name: '/home', page: () => const MyHomePage(title: 'Uxeloft')),
+        GetPage(name: '/login', page: () => const LoginScreen()),
+        GetPage(name: '/onboarding', page: () => const OnboardingScreen()),
+      ],
       home: SplashScreen(
         onFinished: () {
           if (AuthController.to.isLoggedIn.value) {
-            Get.offAll(const MyHomePage(title: 'Uxeloft'));
+            Get.offAllNamed('/home');
           } else {
-            Get.offAll(const OnboardingScreen());
+            Get.offAllNamed('/onboarding');
           }
         },
       ),

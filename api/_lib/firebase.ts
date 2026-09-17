@@ -1,6 +1,7 @@
 import { cert, getApps, initializeApp } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
+import nodemailer, { type Transporter } from 'nodemailer';
 
 function resolveSecret(value: string | undefined): string {
   if (!value) {
@@ -62,31 +63,34 @@ export function sendJson(res: any, status: number, body: object): any {
   return res.status(status).json(body);
 }
 
+let transporter: Transporter | null = null;
+
+function getTransporter(): Transporter {
+  const user = process.env.GMAIL_USER;
+  const pass = process.env.GMAIL_PASS;
+  if (!user || !pass) {
+    throw new Error(
+      'Gmail SMTP is not configured (GMAIL_USER / GMAIL_PASS)',
+    );
+  }
+  if (!transporter) {
+    transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: { user, pass },
+    });
+  }
+  return transporter;
+}
+
 export async function sendEmail(to: string, otp: string): Promise<void> {
-  const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.RESEND_FROM || 'Uxeloft <onboarding@resend.dev>';
+  const user = process.env.GMAIL_USER;
+  const transport = getTransporter();
 
-  if (!apiKey) {
-    throw new Error('Email service is not configured (RESEND_API_KEY)');
-  }
-
-  const response = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      from,
-      to,
-      subject: 'Your Uxeloft verification code',
-      text: `Your Uxeloft verification code is ${otp}. It expires in 5 minutes.`,
-      html: `<p>Your Uxeloft verification code is <b>${otp}</b>.<br/>It expires in 5 minutes.</p>`,
-    }),
+  await transport.sendMail({
+    from: `Uxeloft <${user}>`,
+    to,
+    subject: 'Your Uxeloft verification code',
+    text: `Your Uxeloft verification code is ${otp}. It expires in 5 minutes.`,
+    html: `<p>Your Uxeloft verification code is <b>${otp}</b>.<br/>It expires in 5 minutes.</p>`,
   });
-
-  if (!response.ok) {
-    const body = await response.text();
-    throw new Error(`Failed to send email: ${body}`);
-  }
 }

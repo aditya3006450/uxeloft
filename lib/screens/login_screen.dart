@@ -3,7 +3,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 
 import '../controllers/auth_controller.dart';
-import 'home_screen.dart';
+import 'otp_verification_screen.dart';
+import 'signup_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -14,12 +15,10 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _otpController = TextEditingController();
 
   @override
   void dispose() {
     _emailController.dispose();
-    _otpController.dispose();
     super.dispose();
   }
 
@@ -27,39 +26,29 @@ class _LoginScreenState extends State<LoginScreen> {
     Get.snackbar('Uxeloft', message);
   }
 
-  Future<void> _sendOtp() async {
-    if (_emailController.text.trim().isEmpty) {
+  Future<void> _getOtp() async {
+    final email = _emailController.text.trim();
+    if (email.isEmpty) {
       _showMessage('Enter your email first');
       return;
     }
-    final result = await AuthController.to.sendOtp(_emailController.text);
+    final result = await AuthController.to.sendOtp(email);
+    if (!mounted) return;
     if (result.success) {
-      _showMessage('OTP sent to ${_emailController.text.trim()}');
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => OtpVerificationScreen(email: email),
+        ),
+      );
     } else {
       _showMessage(result.message ?? 'Failed to send OTP');
-    }
-  }
-
-  Future<void> _verifyOtp() async {
-    if (_otpController.text.trim().length != 6) {
-      _showMessage('Enter the 6-digit code');
-      return;
-    }
-    final result = await AuthController.to.verifyOtp(
-      _emailController.text,
-      _otpController.text,
-    );
-    if (result.success) {
-      Get.offAll(const MyHomePage(title: 'Uxeloft'));
-    } else {
-      _showMessage(result.message ?? 'Verification failed');
     }
   }
 
   Future<void> _signInWithGoogle() async {
     final result = await AuthController.to.signInWithGoogle();
     if (result.success) {
-      Get.offAll(const MyHomePage(title: 'Uxeloft'));
+      Get.offAllNamed('/home');
     } else {
       _showMessage(result.message ?? 'Google sign in failed');
     }
@@ -67,38 +56,78 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+
     return Scaffold(
+      backgroundColor: Colors.white,
       body: SafeArea(
-        child: SingleChildScrollView(
+        child: Container(
+          constraints: BoxConstraints(minHeight: size.height),
           padding: const EdgeInsets.all(24),
           child: Column(
             children: [
-              const SizedBox(height: 24),
+              Align(
+                alignment: Alignment.centerRight,
+                child: IconButton(
+                  onPressed: () => Navigator.of(context).maybePop(),
+                  icon: const Icon(Icons.close),
+                ),
+              ),
+              const Spacer(),
               SizedBox(
-                width: 200,
-                height: 200 * 80 / 150,
+                width: 220,
+                height: 220 * 80 / 150,
                 child: SvgPicture.asset('assets/Landing Logo.svg'),
               ),
-              const SizedBox(height: 40),
+              const SizedBox(height: 28),
+              const Text(
+                'Welcome Back!',
+                style: TextStyle(
+                  fontSize: 26,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1A1A1A),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'login to continue',
+                style: TextStyle(
+                  fontSize: 15,
+                  color: Colors.grey.shade600,
+                ),
+              ),
+              const SizedBox(height: 32),
               TextField(
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
-                decoration: const InputDecoration(
-                  labelText: 'Email',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.mail_outline),
+                decoration: InputDecoration(
+                  hintText: 'Email Address',
+                  prefixIcon: const Icon(Icons.phone_iphone, color: Color(0xFF9E9E9E)),
+                  filled: true,
+                  fillColor: Colors.grey.shade100,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 16,
+                  ),
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
               Obx(() => SizedBox(
                     width: double.infinity,
                     height: 52,
                     child: FilledButton(
                       onPressed: AuthController.to.isSendingOtp.value
                           ? null
-                          : _sendOtp,
+                          : _getOtp,
                       style: FilledButton.styleFrom(
                         backgroundColor: const Color(0xFF1A9EB7),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                       child: AuthController.to.isSendingOtp.value
                           ? const SizedBox(
@@ -109,79 +138,109 @@ class _LoginScreenState extends State<LoginScreen> {
                                 color: Colors.white,
                               ),
                             )
-                          : const Text('Send OTP'),
+                          : const Text(
+                              'GET OTP',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: 1.5,
+                              ),
+                            ),
                     ),
                   )),
-              const SizedBox(height: 24),
-              TextField(
-                controller: _otpController,
-                keyboardType: TextInputType.number,
-                maxLength: 6,
-                decoration: const InputDecoration(
-                  labelText: 'Verification code',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.pin_outlined),
-                  counterText: '',
+              const Spacer(),
+              Text(
+                'or continue with',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey.shade600,
                 ),
               ),
               const SizedBox(height: 16),
-              Obx(() => SizedBox(
-                    width: double.infinity,
-                    height: 52,
-                    child: FilledButton(
-                      onPressed: AuthController.to.isVerifyingOtp.value
-                          ? null
-                          : _verifyOtp,
-                      style: FilledButton.styleFrom(
-                        backgroundColor: const Color(0xFFFF8600),
-                      ),
-                      child: AuthController.to.isVerifyingOtp.value
-                          ? const SizedBox(
-                              width: 22,
-                              height: 22,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
-                          : const Text('Verify OTP'),
-                    ),
-                  )),
-              const SizedBox(height: 32),
               Row(
+                mainAxisAlignment: .spaceEvenly,
                 children: [
-                  const Expanded(child: Divider()),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Text(
-                      'or continue with',
-                      style: TextStyle(color: Colors.grey.shade600),
-                    ),
+                  _SocialButton(
+                    label: 'Google',
+                    icon: const Icon(Icons.g_mobiledata, size: 32),
+                    onPressed: _signInWithGoogle,
                   ),
-                  const Expanded(child: Divider()),
+                  _SocialButton(
+                    label: 'Facebook',
+                    icon: const Icon(Icons.facebook, size: 28),
+                    onPressed: () => _showMessage('Facebook login coming soon'),
+                  ),
                 ],
               ),
               const SizedBox(height: 24),
-              Obx(() => SizedBox(
-                    width: double.infinity,
-                    height: 52,
-                    child: OutlinedButton.icon(
-                      onPressed: AuthController.to.isSigningInWithGoogle.value
-                          ? null
-                          : _signInWithGoogle,
-                      icon: AuthController.to.isSigningInWithGoogle.value
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Icon(Icons.g_mobiledata, size: 28),
-                      label: const Text('Continue with Google'),
+              Row(
+                mainAxisAlignment: .center,
+                children: [
+                  Text(
+                    "Don't have an account? ",
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey.shade600,
                     ),
-                  )),
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const SignupScreen(),
+                        ),
+                      );
+                    },
+                    child: const Text(
+                      'Sign Up',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1A9EB7),
+                        decoration: TextDecoration.underline,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _SocialButton extends StatelessWidget {
+  const _SocialButton({
+    required this.label,
+    required this.icon,
+    required this.onPressed,
+  });
+
+  final String label;
+  final Widget icon;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return OutlinedButton(
+      onPressed: onPressed,
+      style: OutlinedButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: const BorderSide(color: Color(0xFFE0E0E0)),
+        ),
+      ),
+      child: Column(
+        mainAxisSize: .min,
+        children: [
+          icon,
+          const SizedBox(height: 4),
+          Text(label, style: const TextStyle(fontSize: 13)),
+        ],
       ),
     );
   }

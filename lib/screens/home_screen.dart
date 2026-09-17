@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../controllers/auth_controller.dart';
-import 'login_screen.dart';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
@@ -24,7 +23,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void _logout() {
     AuthController.to.signOut();
-    Get.offAll(const LoginScreen());
+    Get.offAllNamed('/login');
   }
 
   @override
