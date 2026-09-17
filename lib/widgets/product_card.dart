@@ -56,11 +56,7 @@ class _ProductCardState extends State<ProductCard> {
           Expanded(
             child: Center(
               child: product.image == null
-                  ? Icon(
-                      product.icon,
-                      size: 62,
-                      color: product.iconColor,
-                    )
+                  ? Icon(product.icon, size: 62, color: product.iconColor)
                   : Image.asset(
                       product.image!,
                       fit: BoxFit.contain,
@@ -117,11 +113,7 @@ class _ProductCardState extends State<ProductCard> {
           const SizedBox(height: 10),
           Row(
             children: [
-              const Icon(
-                Icons.star,
-                size: 13,
-                color: AppColors.starYellow,
-              ),
+              const Icon(Icons.star, size: 13, color: AppColors.starYellow),
               const SizedBox(width: 3),
               Text(
                 product.rating.toString(),
@@ -204,9 +196,7 @@ class _MoreMenu extends StatelessWidget {
       splashRadius: 16,
       tooltip: '',
       color: AppColors.background,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(10),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       onSelected: (value) {},
       itemBuilder: (context) => const [
         PopupMenuItem(
@@ -233,3 +223,4 @@ class _MoreMenu extends StatelessWidget {
     );
   }
 }
+

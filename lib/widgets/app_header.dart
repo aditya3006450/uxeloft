@@ -25,11 +25,6 @@ class AppHeader extends StatelessWidget {
               width: 40,
               height: 40,
               alignment: Alignment.centerLeft,
-              child: const Icon(
-                Icons.menu,
-                size: 22,
-                color: AppColors.primaryText,
-              ),
             ),
           ),
           Expanded(
@@ -49,9 +44,8 @@ class AppHeader extends StatelessWidget {
             height: 40,
             child: IconButton(
               padding: EdgeInsets.zero,
-              onPressed: () => Get.to(
-                () => const PlaceholderPage(title: 'Search'),
-              ),
+              onPressed: () =>
+                  Get.to(() => const PlaceholderPage(title: 'Search')),
               icon: const Icon(
                 Icons.search,
                 size: 22,
@@ -85,3 +79,4 @@ class AppHeader extends StatelessWidget {
     );
   }
 }
+

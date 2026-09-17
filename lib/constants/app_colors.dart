@@ -14,6 +14,7 @@ class AppColors {
 
   static const inactiveIcon = Color(0xFFB5B5B5);
   static const categoryLabel = Color(0xFF9295A5);
-  static const cardShadow = Color(0x1A000000);
+static const cardShadow = Color(0x1A000000);
   static const starYellow = Color(0xFFFFC107);
+  static const error = Color(0xFFCF6679);
 }

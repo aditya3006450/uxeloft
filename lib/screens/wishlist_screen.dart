@@ -55,9 +55,8 @@ class WishlistScreen extends StatelessWidget {
               ),
               child: ProductTile(
                 product: product,
-                onTap: () => Get.to(
-                  () => ProductDetailScreen(product: product),
-                ),
+                onTap: () =>
+                    Get.to(() => ProductDetailScreen(product: product)),
               ),
             );
           },

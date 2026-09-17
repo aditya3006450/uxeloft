@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
+import 'package:uxeloft/data/countries.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -19,6 +21,7 @@ class _SignupScreenState extends State<SignupScreen> {
 
   bool _obscurePassword = true;
   bool _obscureRepeat = true;
+  Country _selectedCountry = countries.firstWhere((c) => c.code == 'US');
 
   @override
   void dispose() {
@@ -47,6 +50,34 @@ class _SignupScreenState extends State<SignupScreen> {
       return;
     }
     Get.snackbar('Uxeloft', 'Sign up coming soon');
+  }
+
+  void _showCountryPicker() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.75,
+          minChildSize: 0.5,
+          maxChildSize: 0.95,
+          expand: false,
+          builder: (context, scrollController) {
+            return _CountryPickerSheet(
+              scrollController: scrollController,
+              selectedCountry: _selectedCountry,
+              onSelected: (country) {
+                setState(() => _selectedCountry = country);
+                Navigator.pop(context);
+              },
+            );
+          },
+        );
+      },
+    );
   }
 
   @override
@@ -118,28 +149,34 @@ class _SignupScreenState extends State<SignupScreen> {
               const SizedBox(height: 32),
               Row(
                 children: [
-                  Container(
-                    width: 100,
-                    height: 56,
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    decoration: BoxDecoration(
-                      color: _red,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text('🇮🇳', style: TextStyle(fontSize: 18)),
-                        Text(
-                          '+244',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
+                  GestureDetector(
+                    onTap: _showCountryPicker,
+                    child: Container(
+                      width: 100,
+                      height: 56,
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      decoration: BoxDecoration(
+                        color: _red,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(_selectedCountry.flag, style: const TextStyle(fontSize: 18)),
+                          Expanded(
+                            child: Text(
+                              _selectedCountry.dialCode,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
                           ),
-                        ),
-                        Icon(Icons.keyboard_arrow_down, color: Colors.white),
-                      ],
+                          const Icon(Icons.keyboard_arrow_down, color: Colors.white),
+                        ],
+                      ),
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -187,17 +224,17 @@ class _SignupScreenState extends State<SignupScreen> {
                 children: [
 _socialButton(
                     label: 'Apple',
-                    icon: const _AppleLogo(size: 36),
+                    icon: SvgPicture.asset('assets/signup options/apple.svg', width: 32, height: 32),
                     onTap: () => Get.snackbar('Uxeloft', 'Apple sign in coming soon'),
                   ),
                   _socialButton(
                     label: 'Google',
-                    icon: const _GoogleG(size: 34),
+                    icon: SvgPicture.asset('assets/signup options/google.svg', width: 32, height: 32),
                     onTap: () => Get.snackbar('Uxeloft', 'Google sign in coming soon'),
                   ),
                   _socialButton(
                     label: 'Facebook',
-                    icon: const Icon(Icons.facebook, size: 32),
+                    icon: SvgPicture.asset('assets/signup options/facebook.svg', width: 32, height: 32),
                     onTap: () => Get.snackbar('Uxeloft', 'Facebook sign in coming soon'),
                   ),
                 ],
@@ -283,156 +320,121 @@ _socialButton(
   }
 }
 
-class _GoogleG extends StatelessWidget {
-  const _GoogleG({required this.size});
+class _CountryPickerSheet extends StatefulWidget {
+  final ScrollController scrollController;
+  final Country selectedCountry;
+  final ValueChanged<Country> onSelected;
 
-  final double size;
+  const _CountryPickerSheet({
+    required this.scrollController,
+    required this.selectedCountry,
+    required this.onSelected,
+  });
+
+  @override
+  State<_CountryPickerSheet> createState() => _CountryPickerSheetState();
+}
+
+class _CountryPickerSheetState extends State<_CountryPickerSheet> {
+  final _searchController = TextEditingController();
+  List<Country> _filtered = countries;
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _filter(String query) {
+    setState(() {
+      _filtered = countries
+          .where((c) =>
+              c.name.toLowerCase().contains(query.toLowerCase()) ||
+              c.dialCode.contains(query))
+          .toList();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: size,
-      height: size,
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Expanded(
-            child: Column(
-              children: [
-                Expanded(
-                  child: Container(
-                    decoration: const BoxDecoration(
-                      color: Color(0xFF4285F4),
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(6),
-                      ),
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: Container(
-                    color: const Color(0xFF34A853),
-                    child: const Align(
-                      alignment: Alignment.topRight,
-                      child: SizedBox(width: 6, child: ColoredBox(color: Colors.white)),
-                    ),
-                  ),
-                ),
-              ],
+    return Column(
+      children: [
+        Container(
+          margin: const EdgeInsets.only(top: 12),
+          width: 40,
+          height: 4,
+          decoration: BoxDecoration(
+            color: Colors.grey.shade300,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        const SizedBox(height: 16),
+        const Text(
+          'Select Country',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 12),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: TextField(
+            controller: _searchController,
+            onChanged: _filter,
+            cursorColor: const Color(0xFF17A2B8),
+            decoration: InputDecoration(
+              hintText: 'Search country or code',
+              hintStyle: TextStyle(color: Colors.grey.shade400),
+              prefixIcon: const Icon(Icons.search, color: Color(0xFF9E9E9E)),
+              suffixIcon: _searchController.text.isNotEmpty
+                  ? IconButton(
+                      onPressed: () {
+                        _searchController.clear();
+                        _filter('');
+                      },
+                      icon: const Icon(Icons.clear, color: Color(0xFF9E9E9E)),
+                    )
+                  : null,
+              filled: true,
+              fillColor: Colors.grey.shade100,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
             ),
           ),
-          Expanded(
-            child: Column(
-              children: [
-                Expanded(
-                  child: Container(
-                    color: const Color(0xFFFBBC05),
-                    child: const Align(
-                      alignment: Alignment.bottomLeft,
-                      child: SizedBox(width: 6, child: ColoredBox(color: Colors.white)),
-                    ),
+        ),
+        const SizedBox(height: 8),
+        Expanded(
+          child: ListView.builder(
+            controller: widget.scrollController,
+            itemCount: _filtered.length,
+            itemBuilder: (context, index) {
+              final country = _filtered[index];
+              final isSelected = country.code == widget.selectedCountry.code;
+              return ListTile(
+                leading: Text(country.flag, style: const TextStyle(fontSize: 28)),
+                title: Text(
+                  country.name,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                   ),
                 ),
-                Expanded(
-                  child: Container(
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFEA4335),
-                      borderRadius: BorderRadius.only(
-                        bottomRight: Radius.circular(6),
-                      ),
-                    ),
+                trailing: Text(
+                  country.dialCode,
+                  style: TextStyle(
+                    fontSize: 15,
+                    color: Colors.grey.shade600,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
-              ],
-            ),
+                selected: isSelected,
+                selectedTileColor: const Color(0xFF17A2B8).withValues(alpha: 0.1),
+                onTap: () => widget.onSelected(country),
+              );
+            },
           ),
-        ],
-      ),
+        ),
+      ],
     );
-  }
-}
-
-class _AppleLogo extends StatelessWidget {
-  const _AppleLogo({required this.size});
-
-  final double size;
-
-  @override
-  Widget build(BuildContext context) {
-    return CustomPaint(
-      size: Size(size, size),
-      painter: const _AppleLogoPainter(),
-    );
-  }
-}
-
-class _AppleLogoPainter extends CustomPainter {
-  const _AppleLogoPainter();
-
-  static final Path _path = _parseApplePath();
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    canvas.save();
-    canvas.scale(size.width / 24, size.height / 24);
-    canvas.drawPath(
-      _path,
-      Paint()
-        ..style = PaintingStyle.fill
-        ..color = const Color(0xFF000000),
-    );
-    canvas.restore();
-  }
-
-  @override
-  bool shouldRepaint(covariant _AppleLogoPainter oldDelegate) => false;
-
-  static Path _parseApplePath() {
-    const data =
-        'M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.03 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.637-3.325 1.663-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09z'
-        'M15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.56-1.702z';
-    final tokens = data
-        .replaceAllMapped(RegExp('[mMzc]'), (m) => ' ${m[0]} ')
-        .split(RegExp('\\s+'))
-        .where((t) => t.isNotEmpty)
-        .toList();
-
-    final path = Path();
-    double currentX = 0, currentY = 0;
-    double startX = 0, startY = 0;
-    var index = 0;
-    while (index < tokens.length) {
-      final command = tokens[index++];
-      switch (command) {
-        case 'M':
-          currentX = double.parse(tokens[index++]);
-          currentY = double.parse(tokens[index++]);
-          startX = currentX;
-          startY = currentY;
-          path.moveTo(currentX, currentY);
-        case 'c':
-          final dx1 = double.parse(tokens[index++]);
-          final dy1 = double.parse(tokens[index++]);
-          final dx2 = double.parse(tokens[index++]);
-          final dy2 = double.parse(tokens[index++]);
-          final dx = double.parse(tokens[index++]);
-          final dy = double.parse(tokens[index++]);
-          path.cubicTo(
-            currentX + dx1,
-            currentY + dy1,
-            currentX + dx2,
-            currentY + dy2,
-            currentX + dx,
-            currentY + dy,
-          );
-          currentX += dx;
-          currentY += dy;
-        case 'z':
-          path.close();
-          currentX = startX;
-          currentY = startY;
-      }
-    }
-    return path;
   }
 }

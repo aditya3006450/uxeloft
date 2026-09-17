@@ -4,11 +4,12 @@ import 'package:get/get.dart';
 import '../constants/app_colors.dart';
 import '../data/shop_data.dart';
 import '../widgets/product_tile.dart';
+import '../screens/product_detail_screen.dart';
 
 class CategoryProductsScreen extends StatelessWidget {
-  final String category;
+  const CategoryProductsScreen({required this.category, super.key});
 
-  const CategoryProductsScreen({required this.category});
+  final String category;
 
   @override
   Widget build(BuildContext context) {
@@ -19,7 +20,6 @@ class CategoryProductsScreen extends StatelessWidget {
         backgroundColor: AppColors.background,
         elevation: 0,
         scrolledUnderElevation: 0,
-        scrolledUnderIconTheme: const IconThemeData(color: AppColors.primaryText),
         title: Text(
           category,
           style: const TextStyle(

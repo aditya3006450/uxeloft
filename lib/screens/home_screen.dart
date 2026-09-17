@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../constants/app_colors.dart';
+import '../controllers/auth_controller.dart';
 import '../models/home_models.dart';
 import '../widgets/app_bottom_nav.dart';
 import '../widgets/app_header.dart';
@@ -140,13 +141,20 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      drawer: const _AppDrawer(),
+      drawer: _AppDrawer(),
       body: SafeArea(
         bottom: false,
         child: CustomScrollView(
           physics: const BouncingScrollPhysics(),
           slivers: [
-            const SliverToBoxAdapter(child: AppHeader()),
+            const SliverAppBar(
+              pinned: true,
+              toolbarHeight: 70,
+              title: AppHeader(),
+              titleSpacing: 0,
+              backgroundColor: AppColors.background,
+              surfaceTintColor: Colors.transparent,
+            ),
             SliverToBoxAdapter(child: _GreetingSection()),
             SliverToBoxAdapter(child: PromotionalCarousel()),
             const SliverToBoxAdapter(child: SizedBox(height: 18)),
@@ -190,21 +198,24 @@ class _MyHomePageState extends State<MyHomePage> {
 class _GreetingSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return const Padding(
-      padding: EdgeInsets.fromLTRB(24, 6, 24, 0),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 6, 24, 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Hi, Andrea',
-            style: TextStyle(
-              fontSize: 15.5,
-              fontWeight: FontWeight.w400,
-              color: AppColors.primaryText,
-            ),
-          ),
-          SizedBox(height: 9),
-          Text(
+          Obx(() {
+            final name = AuthController.to.username.value;
+            return Text(
+              name.isNotEmpty ? 'Hi, $name' : 'Hi there',
+              style: const TextStyle(
+                fontSize: 15.5,
+                fontWeight: FontWeight.w400,
+                color: AppColors.primaryText,
+              ),
+            );
+          }),
+          const SizedBox(height: 9),
+          const Text(
             'What are you looking for\ntoday?',
             style: TextStyle(
               fontSize: 25,
@@ -213,7 +224,7 @@ class _GreetingSection extends StatelessWidget {
               color: AppColors.primaryText,
             ),
           ),
-          SizedBox(height: 18),
+          const SizedBox(height: 18),
         ],
       ),
     );
@@ -228,24 +239,34 @@ class _AppDrawer extends StatelessWidget {
     return Drawer(
       backgroundColor: AppColors.background,
       child: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.symmetric(vertical: 24),
-          children: const [
-            ListTile(
+        child: Column(
+          children: [
+            const SizedBox(height: 24),
+            const ListTile(
               leading: Icon(Icons.home_outlined, color: AppColors.accent),
               title: Text('Home'),
             ),
-            ListTile(
+            const ListTile(
               leading: Icon(Icons.grid_view_outlined),
               title: Text('Category'),
             ),
-            ListTile(
+            const ListTile(
               leading: Icon(Icons.shopping_bag_outlined),
               title: Text('My Orders'),
             ),
-            ListTile(
+            const ListTile(
               leading: Icon(Icons.settings_outlined),
               title: Text('Settings'),
+            ),
+            const Spacer(),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.logout, color: AppColors.error),
+              title: const Text('Sign Out'),
+              onTap: () async {
+                await AuthController.to.signOut();
+                Get.offAllNamed('/login');
+              },
             ),
           ],
         ),

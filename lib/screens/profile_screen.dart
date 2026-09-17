@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../constants/app_colors.dart';
 import '../controllers/auth_controller.dart';
-import '../controllers/shop_controller.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -36,9 +35,9 @@ class ProfileScreen extends StatelessWidget {
             CircleAvatar(
               radius: 35,
               backgroundColor: Colors.grey[200],
-              child: AuthController.to.user.photoURL != null
+              child: AuthController.to.user.value?.photoURL != null
                   ? Image.network(
-                      AuthController.to.user.photoURL!,
+                      AuthController.to.user.value!.photoURL!,
                       fit: BoxFit.cover,
                     )
                   : const Icon(
@@ -92,3 +91,4 @@ class ProfileScreen extends StatelessWidget {
       ),
     );
   }
+}

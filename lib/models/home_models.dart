@@ -19,6 +19,8 @@ class Product {
   final double price;
   final double rating;
   final int reviewCount;
+  final String? category;
+  final String? description;
   final IconData icon;
   final Color iconColor;
   final String? image;
@@ -28,6 +30,8 @@ class Product {
     required this.price,
     required this.rating,
     required this.reviewCount,
+    this.category,
+    this.description,
     required this.icon,
     this.iconColor = Colors.pinkAccent,
     this.image,

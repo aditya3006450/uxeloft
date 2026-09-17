@@ -31,8 +31,8 @@ class _SearchScreenState extends State<SearchScreen> {
     final q = _query.toLowerCase();
     return ShopData.products.where((p) {
       return p.name.toLowerCase().contains(q) ||
-          p.category.toLowerCase().contains(q) ||
-          p.description.toLowerCase().contains(q);
+          p.category.toString().toLowerCase().contains(q) ||
+          p.description.toString().toLowerCase().contains(q);
     }).toList();
   }
 
@@ -56,10 +56,7 @@ class _SearchScreenState extends State<SearchScreen> {
             controller: _searchController,
             autofocus: true,
             onChanged: (val) => setState(() => _query = val),
-            style: const TextStyle(
-              fontSize: 14,
-              color: AppColors.primaryText,
-            ),
+            style: const TextStyle(fontSize: 14, color: AppColors.primaryText),
             decoration: InputDecoration(
               hintText: 'Search products, categories...',
               hintStyle: const TextStyle(
@@ -129,9 +126,8 @@ class _SearchScreenState extends State<SearchScreen> {
                 final product = results[index];
                 return ProductTile(
                   product: product,
-                  onTap: () => Get.to(
-                    () => ProductDetailScreen(product: product),
-                  ),
+                  onTap: () =>
+                      Get.to(() => ProductDetailScreen(product: product)),
                 );
               },
             ),

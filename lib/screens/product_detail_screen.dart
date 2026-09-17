@@ -73,7 +73,7 @@ class ProductDetailScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 22),
                   Text(
-                    product.category.toUpperCase(),
+                    product.category?.toUpperCase() ?? '',
                     style: const TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
@@ -122,7 +122,7 @@ class ProductDetailScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    product.description,
+                    product.description ?? '',
                     style: const TextStyle(
                       fontSize: 13.5,
                       height: 1.5,

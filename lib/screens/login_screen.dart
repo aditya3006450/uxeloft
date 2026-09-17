@@ -36,9 +36,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!mounted) return;
     if (result.success) {
       Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (_) => OtpVerificationScreen(email: email),
-        ),
+        MaterialPageRoute(builder: (_) => OtpVerificationScreen(email: email)),
       );
     } else {
       _showMessage(result.message ?? 'Failed to send OTP');
@@ -91,10 +89,7 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 8),
               Text(
                 'login to continue',
-                style: TextStyle(
-                  fontSize: 15,
-                  color: Colors.grey.shade600,
-                ),
+                style: TextStyle(fontSize: 15, color: Colors.grey.shade600),
               ),
               const SizedBox(height: 32),
               TextField(
@@ -102,7 +97,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 keyboardType: TextInputType.emailAddress,
                 decoration: InputDecoration(
                   hintText: 'Email Address',
-                  prefixIcon: const Icon(Icons.phone_iphone, color: Color(0xFF9E9E9E)),
+                  prefixIcon: const Icon(
+                    Icons.phone_iphone,
+                    color: Color(0xFF9E9E9E),
+                  ),
                   filled: true,
                   fillColor: Colors.grey.shade100,
                   border: OutlineInputBorder(
@@ -116,45 +114,44 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
               const SizedBox(height: 20),
-              Obx(() => SizedBox(
-                    width: double.infinity,
-                    height: 52,
-                    child: FilledButton(
-                      onPressed: AuthController.to.isSendingOtp.value
-                          ? null
-                          : _getOtp,
-                      style: FilledButton.styleFrom(
-                        backgroundColor: const Color(0xFF1A9EB7),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
+              Obx(
+                () => SizedBox(
+                  width: double.infinity,
+                  height: 52,
+                  child: FilledButton(
+                    onPressed: AuthController.to.isSendingOtp.value
+                        ? null
+                        : _getOtp,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: const Color(0xFF1A9EB7),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      child: AuthController.to.isSendingOtp.value
-                          ? const SizedBox(
-                              width: 22,
-                              height: 22,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
-                          : const Text(
-                              'GET OTP',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: 1.5,
-                              ),
-                            ),
                     ),
-                  )),
+                    child: AuthController.to.isSendingOtp.value
+                        ? const SizedBox(
+                            width: 22,
+                            height: 22,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Text(
+                            'GET OTP',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: 1.5,
+                            ),
+                          ),
+                  ),
+                ),
+              ),
               const Spacer(),
               Text(
                 'or continue with',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey.shade600,
-                ),
+                style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
               ),
               const SizedBox(height: 16),
               Row(
@@ -162,12 +159,20 @@ class _LoginScreenState extends State<LoginScreen> {
                 children: [
                   _SocialButton(
                     label: 'Google',
-                    icon: const Icon(Icons.g_mobiledata, size: 32),
+                    icon: SvgPicture.asset(
+                      'assets/signup options/google.svg',
+                      width: 28,
+                      height: 28,
+                    ),
                     onPressed: _signInWithGoogle,
                   ),
                   _SocialButton(
                     label: 'Facebook',
-                    icon: const Icon(Icons.facebook, size: 28),
+                    icon: SvgPicture.asset(
+                      'assets/signup options/facebook.svg',
+                      width: 28,
+                      height: 28,
+                    ),
                     onPressed: () => _showMessage('Facebook login coming soon'),
                   ),
                 ],
@@ -178,17 +183,12 @@ class _LoginScreenState extends State<LoginScreen> {
                 children: [
                   Text(
                     "Don't have an account? ",
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey.shade600,
-                    ),
+                    style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
                   ),
                   GestureDetector(
                     onTap: () {
                       Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const SignupScreen(),
-                        ),
+                        MaterialPageRoute(builder: (_) => const SignupScreen()),
                       );
                     },
                     child: const Text(
@@ -245,3 +245,4 @@ class _SocialButton extends StatelessWidget {
     );
   }
 }
+

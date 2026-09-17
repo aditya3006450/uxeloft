@@ -78,6 +78,7 @@ flutter:
     - assets/banners/
     - assets/categories/
     - assets/products/
+    - assets/signup options/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

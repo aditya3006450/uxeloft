@@ -14,12 +14,39 @@ class OtpVerificationScreen extends StatefulWidget {
 }
 
 class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
-  final TextEditingController _otpController = TextEditingController();
+  static const _teal = Color(0xFF17A2B8);
+  static const _lightCyanBg = Color(0xFFE8F4F8);
+  static const _textDark = Color(0xFF1F2937);
+  static const _textGray = Color(0xFF6B7280);
+  static const _borderColor = Color(0xFFD1D5DB);
+
+  final List<TextEditingController> _controllers =
+      List.generate(4, (_) => TextEditingController());
+  final List<FocusNode> _focusNodes = List.generate(4, (_) => FocusNode());
 
   @override
   void dispose() {
-    _otpController.dispose();
+    for (final c in _controllers) {
+      c.dispose();
+    }
+    for (final n in _focusNodes) {
+      n.dispose();
+    }
     super.dispose();
+  }
+
+  String get _otpCode =>
+      _controllers.map((c) => c.text).join();
+
+  bool get _isOtpComplete => _otpCode.length == 4;
+
+  void _onDigitChanged(int index, String value) {
+    if (value.length == 1 && index < 3) {
+      _focusNodes[index + 1].requestFocus();
+    } else if (value.isEmpty && index > 0) {
+      _focusNodes[index - 1].requestFocus();
+    }
+    setState(() {});
   }
 
   void _showMessage(String message) {
@@ -27,13 +54,13 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
   }
 
   Future<void> _verify() async {
-    if (_otpController.text.trim().length != 4) {
+    if (!_isOtpComplete) {
       _showMessage('Enter the 4-digit code');
       return;
     }
     final result = await AuthController.to.verifyOtp(
       widget.email,
-      _otpController.text,
+      _otpCode,
     );
     if (result.success) {
       Get.offAllNamed('/home');
@@ -53,113 +80,188 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        leading: IconButton(
-          onPressed: () => Navigator.of(context).maybePop(),
-          icon: const Icon(Icons.arrow_back_ios_new),
-        ),
-        centerTitle: true,
-        title: const Text(
-          'OTP Verification',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF1A1A1A),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 8),
+              _buildBackButton(),
+              const SizedBox(height: 40),
+              _buildTitle(),
+              const SizedBox(height: 12),
+              _buildDescription(),
+              const SizedBox(height: 40),
+              _buildOtpFields(),
+              const SizedBox(height: 40),
+              _buildVerifyButton(),
+              const SizedBox(height: 16),
+              _buildResendButton(),
+            ],
           ),
         ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: .stretch,
-          children: [
-            const SizedBox(height: 24),
-            Text(
-              'Enter the 4-digit code sent to\n${widget.email}',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 15,
-                color: Colors.grey.shade600,
-                height: 1.5,
-              ),
-            ),
-            const SizedBox(height: 32),
-            TextField(
-              controller: _otpController,
+    );
+  }
+
+  Widget _buildBackButton() {
+    return GestureDetector(
+      onTap: () => Navigator.of(context).maybePop(),
+      child: Container(
+        width: 44,
+        height: 44,
+        decoration: const BoxDecoration(
+          color: _lightCyanBg,
+          shape: BoxShape.circle,
+        ),
+        child: const Icon(
+          Icons.arrow_back_ios_new,
+          color: _teal,
+          size: 18,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTitle() {
+    return const Text(
+      'OTP Verification',
+      style: TextStyle(
+        fontSize: 26,
+        fontWeight: FontWeight.bold,
+        color: _textDark,
+      ),
+    );
+  }
+
+  Widget _buildDescription() {
+    return Text(
+      'Enter the verification code we just sent on your email address.',
+      style: TextStyle(
+        fontSize: 14,
+        color: _textGray,
+        height: 1.5,
+      ),
+    );
+  }
+
+  Widget _buildOtpFields() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: List.generate(4, (index) {
+        return SizedBox(
+          width: 60,
+          height: 60,
+          child: KeyboardListener(
+            focusNode: FocusNode(),
+            onKeyEvent: (event) {
+              if (event is KeyDownEvent &&
+                  event.logicalKey == LogicalKeyboardKey.backspace &&
+                  _controllers[index].text.isEmpty &&
+                  index > 0) {
+                _controllers[index - 1].clear();
+                _focusNodes[index - 1].requestFocus();
+              }
+            },
+            child: TextField(
+              controller: _controllers[index],
+              focusNode: _focusNodes[index],
               keyboardType: TextInputType.number,
-              maxLength: 4,
+              maxLength: 1,
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
               textAlign: TextAlign.center,
               style: const TextStyle(
-                fontSize: 32,
-                fontWeight: FontWeight.w600,
-                letterSpacing: 24,
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: _textDark,
               ),
               decoration: InputDecoration(
                 counterText: '',
-                hintText: '----',
-                hintStyle: TextStyle(
-                  fontSize: 32,
-                  letterSpacing: 24,
-                  color: Colors.grey.shade300,
-                ),
+                contentPadding: EdgeInsets.zero,
                 filled: true,
-                fillColor: Colors.grey.shade100,
+                fillColor: Colors.white,
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
-                ),
-                contentPadding: const EdgeInsets.symmetric(vertical: 18),
-              ),
-            ),
-            const SizedBox(height: 32),
-            Obx(() => SizedBox(
-                  width: double.infinity,
-                  height: 52,
-                  child: FilledButton(
-                    onPressed:
-                        AuthController.to.isVerifyingOtp.value ? null : _verify,
-                    style: FilledButton.styleFrom(
-                      backgroundColor: const Color(0xFF1A9EB7),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: AuthController.to.isVerifyingOtp.value
-                        ? const SizedBox(
-                            width: 22,
-                            height: 22,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : const Text(
-                            'VERIFY OTP',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: 1.5,
-                            ),
-                          ),
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: const BorderSide(
+                    color: _borderColor,
+                    width: 1.5,
                   ),
-                )),
-            const SizedBox(height: 16),
-            Center(
-              child: TextButton(
-                onPressed: _resend,
-                child: Text(
-                  'Resend code',
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: const BorderSide(
+                    color: _borderColor,
+                    width: 1.5,
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: const BorderSide(
+                    color: _teal,
+                    width: 1.5,
+                  ),
+                ),
+              ),
+              onChanged: (value) => _onDigitChanged(index, value),
+            ),
+          ),
+        );
+      }),
+    );
+  }
+
+  Widget _buildVerifyButton() {
+    return Obx(() {
+      final isLoading = AuthController.to.isVerifyingOtp.value;
+      final enabled = _isOtpComplete && !isLoading;
+
+      return SizedBox(
+        width: double.infinity,
+        height: 56,
+        child: FilledButton(
+          onPressed: enabled ? _verify : null,
+          style: FilledButton.styleFrom(
+            backgroundColor: _teal,
+            disabledBackgroundColor: _teal.withValues(alpha: 0.5),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(28),
+            ),
+          ),
+          child: isLoading
+              ? const SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
+                )
+              : const Text(
+                  'VERIFY',
                   style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.grey.shade700,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.2,
+                    color: Colors.white,
                   ),
                 ),
-              ),
-            ),
-          ],
+        ),
+      );
+    });
+  }
+
+  Widget _buildResendButton() {
+    return Center(
+      child: TextButton(
+        onPressed: _resend,
+        child: const Text(
+          'Resend code',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: _textGray,
+          ),
         ),
       ),
     );
