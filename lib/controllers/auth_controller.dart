@@ -12,6 +12,7 @@ class AuthController extends GetxController {
   static const String boxName = 'auth';
   static const String keyIsLoggedIn = 'isLoggedIn';
   static const String keyUsername = 'username';
+  static const String keyAuthMethod = 'method';
 
   static AuthController get to => Get.find();
 
@@ -38,10 +39,14 @@ class AuthController extends GetxController {
 
     _auth.authStateChanges().listen((firebaseUser) {
       user.value = firebaseUser;
-      isLoggedIn.value = firebaseUser != null;
-      _box.put(keyIsLoggedIn, firebaseUser != null);
       if (firebaseUser != null) {
+        isLoggedIn.value = true;
+        _box.put(keyIsLoggedIn, true);
+        _box.put(keyAuthMethod, 'google');
         _saveUsername(firebaseUser);
+      } else if (_box.get(keyAuthMethod, defaultValue: '') != 'email') {
+        isLoggedIn.value = false;
+        _box.put(keyIsLoggedIn, false);
       }
     });
   }
@@ -96,9 +101,12 @@ class AuthController extends GetxController {
         body: jsonEncode({'email': email.trim(), 'code': code.trim()}),
       );
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body) as Map<String, dynamic>;
-        final token = data['token'] as String;
-        await _auth.signInWithCustomToken(token);
+        final name = email.trim().split('@').first;
+        isLoggedIn.value = true;
+        username.value = name;
+        await _box.put(keyIsLoggedIn, true);
+        await _box.put(keyUsername, name);
+        await _box.put(keyAuthMethod, 'email');
         return (success: true, message: null);
       }
       final data = _tryDecode(response.body);
@@ -147,5 +155,9 @@ class AuthController extends GetxController {
   Future<void> signOut() async {
     await _googleSignIn.signOut();
     await _auth.signOut();
+    await _box.delete(keyAuthMethod);
+    await _box.delete(keyIsLoggedIn);
+    isLoggedIn.value = false;
+    username.value = '';
   }
 }
