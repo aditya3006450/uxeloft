@@ -48,7 +48,7 @@ export const COOLDOWN_MS = 30 * 1000;
 export const MAX_ATTEMPTS = 5;
 
 export function genOtp(): string {
-  return String(Math.floor(Math.random() * 10 ** 6)).padStart(6, '0');
+  return String(Math.floor(Math.random() * 10 ** 4)).padStart(4, '0');
 }
 
 export const sha256 = (input: string): string => {

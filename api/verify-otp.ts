@@ -28,8 +28,8 @@ export default async function handler(
     if (!EMAIL_REGEX.test(email)) {
       return sendJson(res, 400, { error: 'Invalid email address' });
     }
-    if (!/^\d{6}$/.test(code)) {
-      return sendJson(res, 400, { error: 'Code must be 6 digits' });
+    if (!/^\d{4}$/.test(code)) {
+      return sendJson(res, 400, { error: 'Code must be 4 digits' });
     }
 
     const ref = db.collection('otpRequests').doc(email);

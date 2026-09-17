@@ -1,3 +1,15 @@
 {
+  "version": 2,
+  "functions": {
+    "api/index.ts": {
+      "runtime": "nodejs20.x"
+    },
+    "api/send-otp.ts": {
+      "runtime": "nodejs20.x"
+    },
+    "api/verify-otp.ts": {
+      "runtime": "nodejs20.x"
+    }
+  },
   "rewrites": [{ "source": "/", "destination": "/api" }]
 }

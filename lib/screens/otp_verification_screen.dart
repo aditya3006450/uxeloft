@@ -27,8 +27,8 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
   }
 
   Future<void> _verify() async {
-    if (_otpController.text.trim().length != 6) {
-      _showMessage('Enter the 6-digit code');
+    if (_otpController.text.trim().length != 4) {
+      _showMessage('Enter the 4-digit code');
       return;
     }
     final result = await AuthController.to.verifyOtp(
@@ -76,7 +76,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
           children: [
             const SizedBox(height: 24),
             Text(
-              'Enter the 6-digit code sent to\n${widget.email}',
+              'Enter the 4-digit code sent to\n${widget.email}',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 15,
@@ -88,19 +88,19 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
             TextField(
               controller: _otpController,
               keyboardType: TextInputType.number,
-              maxLength: 6,
+              maxLength: 4,
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
               textAlign: TextAlign.center,
               style: const TextStyle(
-                fontSize: 28,
+                fontSize: 32,
                 fontWeight: FontWeight.w600,
                 letterSpacing: 24,
               ),
               decoration: InputDecoration(
                 counterText: '',
-                hintText: '------',
+                hintText: '----',
                 hintStyle: TextStyle(
-                  fontSize: 28,
+                  fontSize: 32,
                   letterSpacing: 24,
                   color: Colors.grey.shade300,
                 ),
