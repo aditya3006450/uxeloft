@@ -1,42 +1,33 @@
 import {
-  CORS_HEADERS,
   EMAIL_REGEX,
   MAX_ATTEMPTS,
   OTP_TTL_MS,
+  type RouteResult,
   auth,
   db,
-  json,
   sha256,
 } from './_lib/firebase';
 
-export function OPTIONS(): Response {
-  return new Response(null, { status: 204, headers: CORS_HEADERS });
-}
-
-export async function POST(request: Request): Promise<Response> {
+export async function handleVerifyOtp(payload: any): Promise<RouteResult> {
   try {
-    let body: { email?: string; code?: string };
-    try {
-      body = (await request.json()) as { email?: string; code?: string };
-    } catch {
-      return json({ error: 'Invalid JSON body' }, 400);
-    }
-
-    const email = String(body?.email || '').trim().toLowerCase();
-    const code = String(body?.code || '').trim();
+    const email = String(payload?.email || '').trim().toLowerCase();
+    const code = String(payload?.code || '').trim();
 
     if (!EMAIL_REGEX.test(email)) {
-      return json({ error: 'Invalid email address' }, 400);
+      return { status: 400, body: { error: 'Invalid email address' } };
     }
     if (!/^\d{4}$/.test(code)) {
-      return json({ error: 'Code must be 4 digits' }, 400);
+      return { status: 400, body: { error: 'Code must be 4 digits' } };
     }
 
     const ref = db.collection('otpRequests').doc(email);
     const snap = await ref.get();
 
     if (!snap.exists) {
-      return json({ error: 'No code requested for this email' }, 404);
+      return {
+        status: 404,
+        body: { error: 'No code requested for this email' },
+      };
     }
 
     const data = snap.data()!;
@@ -47,18 +38,21 @@ export async function POST(request: Request): Promise<Response> {
 
     if (Date.now() > expiresAt) {
       await ref.delete();
-      return json({ error: 'Code has expired' }, 410);
+      return { status: 410, body: { error: 'Code has expired' } };
     }
 
     const attempts = data.attempts ?? 0;
     if (attempts >= MAX_ATTEMPTS) {
       await ref.delete();
-      return json({ error: 'Too many attempts, request a new code' }, 429);
+      return {
+        status: 429,
+        body: { error: 'Too many attempts, request a new code' },
+      };
     }
 
     if (data.codeHash !== sha256(code)) {
       await ref.update({ attempts: attempts + 1 });
-      return json({ error: 'Incorrect code' }, 401);
+      return { status: 401, body: { error: 'Incorrect code' } };
     }
 
     await ref.delete();
@@ -77,9 +71,12 @@ export async function POST(request: Request): Promise<Response> {
 
     const token = await auth.createCustomToken(uid);
 
-    return json({ success: true, token });
+    return { status: 200, body: { success: true, token } };
   } catch (error: any) {
     console.error('verifyOtp error', error);
-    return json({ error: error?.message || 'Something went wrong' }, 500);
+    return {
+      status: 500,
+      body: { error: error?.message || 'Something went wrong' },
+    };
   }
 }

@@ -1,31 +1,19 @@
 import {
   COOLDOWN_MS,
-  CORS_HEADERS,
   EMAIL_REGEX,
   OTP_TTL_MS,
+  type RouteResult,
   db,
   genOtp,
-  json,
   sendEmail,
   sha256,
 } from './_lib/firebase';
 
-export function OPTIONS(): Response {
-  return new Response(null, { status: 204, headers: CORS_HEADERS });
-}
-
-export async function POST(request: Request): Promise<Response> {
+export async function handleSendOtp(payload: any): Promise<RouteResult> {
   try {
-    let body: { email?: string };
-    try {
-      body = (await request.json()) as { email?: string };
-    } catch {
-      return json({ error: 'Invalid JSON body' }, 400);
-    }
-
-    const email = String(body?.email || '').trim().toLowerCase();
+    const email = String(payload?.email || '').trim().toLowerCase();
     if (!EMAIL_REGEX.test(email)) {
-      return json({ error: 'Invalid email address' }, 400);
+      return { status: 400, body: { error: 'Invalid email address' } };
     }
 
     const ref = db.collection('otpRequests').doc(email);
@@ -38,10 +26,10 @@ export async function POST(request: Request): Promise<Response> {
           ? data.createdAt
           : data.createdAt?.toMillis?.() ?? 0;
       if (Date.now() - createdAt < COOLDOWN_MS) {
-        return json(
-          { error: 'Please wait a moment before requesting a new code' },
-          429,
-        );
+        return {
+          status: 429,
+          body: { error: 'Please wait a moment before requesting a new code' },
+        };
       }
     }
 
@@ -55,9 +43,12 @@ export async function POST(request: Request): Promise<Response> {
 
     await sendEmail(email, otp);
 
-    return json({ success: true });
+    return { status: 200, body: { success: true } };
   } catch (error: any) {
     console.error('sendOtp error', error);
-    return json({ error: error?.message || 'Something went wrong' }, 500);
+    return {
+      status: 500,
+      body: { error: error?.message || 'Something went wrong' },
+    };
   }
 }
